@@ -15,5 +15,5 @@ int main()
     cin >> b;
     cout << "Enter c: ";
     cin >> c;
-    cout << " The sum is " << a+b+c << endl;
+    cout << "The sum of integers (a, b, c) is " << a+b+c << endl;
 }
