@@ -6,8 +6,8 @@ using namespace std;
 
 int main()
 {
-    int a, b, c, min1, min2, min3;
-    cout << "Enter three numbers through space: ";
+    string a, b, c, min1, min2, min3;
+    cout << "Enter three words through space: ";
     cin >> a >> b >> c;
     min1 = (a < b) ? a : b;
     if (min1 > c) min1 = c;
@@ -41,5 +41,5 @@ int main()
             min3 = a;
         }
     }
-    cout << "Numbers are sorted: " << min1 << ' ' << min2 << ' ' << min3 << endl;
+    cout << "The words are sorted: " << min1 << ' ' << min2 << ' ' << min3 << endl;
 }
