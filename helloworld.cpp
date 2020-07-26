@@ -5,20 +5,18 @@
 
 using namespace std;
 
-bool comp (int a,int b) { return (a>b); }
-
 int main()
 {
-    vector<int> v = {1,2,5,66,54,3,21};
-    //cout << v.size() << endl;
-    for (int x : v) cout << x << " ";
-    cout << endl;
-    sort(v.begin(), v.end(), comp);
-    for (int x : v) cout << x << " ";
-    cout << endl;
-    
-    
-
-    
-
+    double a,b,c=1.0/100;
+    while (cin>>a>>b)
+    {
+        if (a=='|') break;
+        cout<<"a = "<<a<<"; b = "<<b<<".\n";
+        if (a==b) cout<<"The numbers are equal.\n";
+        else if (a+c==b||a-c==b) cout<<"The numbers are almost equal.\n";
+        else {
+            cout<<"The smallest number: "<<((a<b)?a:b)<<"."<<endl;
+            cout<<"The biggest number: "<<((a>b)?a:b)<<"."<<endl;
+        }
+    }
 }
