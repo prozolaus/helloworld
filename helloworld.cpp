@@ -7,32 +7,33 @@ using namespace std;
 
 int main()
 {
-    double a=0, min=0, max=0, sum=0;
-    vector<double> v;
-    int count = 0;
-    string s="";
-    while (cin>>a>>s)
+   int x = 51, m = 1, n = 101, i = 1, count = 0;
+    bool flag = false;
+    double d = 0;
+    char a = ' ';
+    cout << "Загадайте число від 1 до 100.\n\n";
+    while ((n - m) > 3 && count < 5)
     {
-        if (a=='|') break;
-        if (s=="cm") a/=100; // 1m = 100cm
-        else if (s=="in") a=a*2.54/100; // 1ft = 12in
-        else if (s=="ft") a=a*12*2.54/100; // 1 in = 2.54cm
-        else if (s!="m") continue; 
-        v.push_back(a);
-        if (a < min) {
-            min = a;
-            cout<< min <<"m - the most smallest among inputted numbers."<<endl;
+        cout << "Чи Ваше число менше, ніж " << x << "?\n";
+        cin >> a;
+        if (a == 'y') n = x;
+        else if (a == 'n') m = x;
+        else continue;
+        d = (m + n) / 2.0;
+        if ((m + n) % 2 == 1) {
+            if (!flag) { x = (int)d; flag = true; }
+            else { x = (int)d + 1; flag = false; }
         }
-        else if (a > max) {
-            max = a;
-            cout<< max <<"m - the most biggest among inputted numbers."<<endl;
-        }
+        else x = (int)d;
         count++;
-        sum+=a;
     }
-    sort(v.begin(),v.end());
-    cout << "The all inputted and sorted numbers: " << endl;
-    for (double x : v) cout << x << "m ";
-    cout << "\nAmount of inputted numbers: "<< count << endl;
-    cout << "The sum of inputted numbers: "<< sum << "m." << endl;
+    for (a = 'n'; a == 'n'; i++)
+    {
+        if (i == 3) break;
+        cout << "Ваше число " << m + i << "?\n";
+        cin >> a;
+        if (a == 'y') x = m + i;
+    }
+    if (a == 'n') x = m;
+    cout << "Чудово! Значить, Ви задумали число " << x << ".\n";
 }
