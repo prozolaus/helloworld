@@ -7,33 +7,14 @@ using namespace std;
 
 int main()
 {
-   double a = 0, b = 0, res = 0;
-  char oper;
-  string act;
-  cin >> a;
-  cin >> oper;
-  cin >> b;
-  switch (oper)
+  vector<string> str = { "one","two","three","four","five","six","seven","eight","nine" };
+  int number;
+  string s;
+  cin >> number;
+  cout << str[number - 1] << endl;
+  cin >> s;
+  for (int i = 0; i < str.size(); i++)
   {
-  case '+':
-    res = a + b;
-    act = "Sum";
-    break;
-  case '-':
-    res = a - b;
-    act = "Difference";
-    break;
-  case '*':
-    res = a * b;
-    act = "Multiplication";
-    break;
-  case '/':
-    res = a / b;
-    act = "Division";
-    break;
-  default:
-    cout << "Incorrect operation!\n";
-    break;
+    if (s == str[i]) cout << i+1 << endl;
   }
-  cout << act << " of " << a << " and " << b << " is " << res << endl;
 }
