@@ -15,9 +15,11 @@ void print_vector(vector<int> a) {
 
 int main()
 {
-  const int n = 200;
-  vector<int> numbers;
-  vector<int> primes;
+  int n = 100;
+  vector<int> numbers, primes;
+  cout << "Input max number: ";
+  cin >> n;
+  cout << endl;
   for (int i = 0; i < n; i++)
     numbers.push_back(i);
   numbers[1] = 0;
@@ -25,7 +27,6 @@ int main()
     if (numbers[i]!=0)
       for (int j = i*2; j < n; j+=i)
         numbers[j] = 0;
-  print_vector(numbers);
   for (int i = 0; i < n; i++)
     if (numbers[i]!=0) primes.push_back(i);
   print_vector(primes);
