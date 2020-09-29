@@ -4,35 +4,42 @@
 #include <algorithm>
 #include <iomanip>
 #include <ctime>
+#include <set>
 
 using namespace std;
 
 void print_vector(vector<int> a) {
   for (int i = 0; i < a.size(); i++) 
     cout << a[i] << " ";
-  cout << endl << endl;
+  cout << endl;
 }
 
 int main()
 {
-  int n, p;
-  vector<int> numbers, primes;
-  cout << "Input number of prime numbers: ";
-  cin >> p;
-  n = p*10;
-  cout << endl;
+  srand(static_cast<unsigned int>(time(0)));
+  set<int> st;
+  vector<int> numbers, counts;
+  const int n = 35;
+  int count, max = 0;
+  for (int i = 0; i < n; i++) numbers.push_back(rand()%10);
+  print_vector(numbers);
   for (int i = 0; i < n; i++)
-    numbers.push_back(i);
-  numbers[1] = 0;
-  for (int i = 2; i < n; i++)
-    if (numbers[i]!=0)
-      for (int j = i*2; j < n; j+=i)
-        numbers[j] = 0;
-  for (int i = 0, j = 0; i < n && j < p; i++)
-    if (numbers[i]!=0) {
-      primes.push_back(i);
-      j++;
-    }
-  cout << p << " prime numbers from 2 to " << primes[p-1] << ": \n";
-  print_vector(primes);
+  {
+    count = 0;
+    for (int j = 0; j < n; j++)
+      if (numbers[j]==numbers[i]) 
+        count++;
+    counts.push_back(count);
+    if (count > max) 
+      max = count;
+  }
+  //print_vector(counts);
+  for (int i = 0; i < n; i++)
+    if (max==counts[i]) st.insert(numbers[i]);
+  set<int> :: iterator it = st.begin();
+  cout << "Moda: " ;
+  for (; it != st.end(); it++) {
+    cout << *it << " ";
+  }
+  cout << endl;
 }
