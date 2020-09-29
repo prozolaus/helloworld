@@ -8,6 +8,12 @@
 
 using namespace std;
 
+void print_vector(vector<string> a) {
+  for (int i = 0; i < a.size(); i++) 
+    cout << a[i] << " ";
+  cout << endl << endl;
+}
+
 void print_vector(vector<int> a) {
   for (int i = 0; i < a.size(); i++) 
     cout << a[i] << " ";
@@ -16,17 +22,16 @@ void print_vector(vector<int> a) {
 
 int main()
 {
-  srand(static_cast<unsigned int>(time(0)));
-  vector<int> numbers, counts, maxs;
-  const int n = 10;
+  vector<string> strings = {"you", "they", "we", "they", "me", "she", "you", "me", "you"}, maxs;
+  vector<int> counts;
+  int n = strings.size();
   int count, max = 0;
-  for (int i = 0; i < n; i++) numbers.push_back(rand()%10);
-  print_vector(numbers);
+  print_vector(strings);
   for (int i = 0; i < n; i++)
   {
     count = 0;
     for (int j = 0; j < n; j++)
-      if (numbers[j]==numbers[i]) 
+      if (strings[j]==strings[i]) 
         count++;
     counts.push_back(count);
     if (count > max) 
@@ -37,10 +42,8 @@ int main()
     if (max==counts[i]) {
       bool flag = false;
       for (int j = 0; j < maxs.size(); j++)
-      {
-        if (numbers[i]==maxs[j]) flag = true;
-      }
-      if (!flag) maxs.push_back(numbers[i]);
+        if (strings[i]==maxs[j]) flag = true;
+      if (!flag) maxs.push_back(strings[i]);
     }
   cout << "Moda: " ;
   print_vector(maxs);
