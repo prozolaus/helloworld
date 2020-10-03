@@ -32,21 +32,20 @@ int main()
       scores.push_back(str2);
     }
   }
-  str1 = "";
+  str2 = "";
   while (true)
   {
     flag2 = true;
-    cout << "Input name of person (NoName for exit): ";
-    cin >> str1;
-    if (str1 == "NoName")
+    cout << "Input score of person (- for exit): ";
+    cin >> str2;
+    if (str2 == "-")
       break;
     for (int i = 0; i < names.size(); i++) {
-      if (str1 == names[i]) {
+      if (str2 == scores[i]) {
         cout << names[i] << " has " << scores[i] << " scores" << endl;
         flag2 = false;
-        break;
       }
     }
-    if (flag2) cout << "Error! Our base doesn't consist this name!" << endl;
+    if (flag2) cout << "Error! Our base doesn't contain such a score!" << endl;
   }
 }
