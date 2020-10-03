@@ -13,7 +13,7 @@ int main()
 {
   string str1, str2;
   vector<string> names, scores;
-  bool flag;
+  bool flag, flag2;
   while (str1 != "NoName" && str2 != "0")
   {
     flag = false;
@@ -32,6 +32,21 @@ int main()
       scores.push_back(str2);
     }
   }
-  for (int i = 0; i < names.size(); i++)
-    cout << names[i] << ": " << scores[i] << " scores" << endl;
+  str1 = "";
+  while (true)
+  {
+    flag2 = true;
+    cout << "Input name of person (NoName for exit): ";
+    cin >> str1;
+    if (str1 == "NoName")
+      break;
+    for (int i = 0; i < names.size(); i++) {
+      if (str1 == names[i]) {
+        cout << names[i] << " has " << scores[i] << " scores" << endl;
+        flag2 = false;
+        break;
+      }
+    }
+    if (flag2) cout << "Error! Our base doesn't consist this name!" << endl;
+  }
 }
