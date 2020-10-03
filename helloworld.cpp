@@ -5,47 +5,35 @@
 #include <iomanip>
 #include <ctime>
 #include <set>
+#include <cmath>
 
 using namespace std;
 
-void print_vector(vector<string> a) {
-  for (int i = 0; i < a.size(); i++) 
-    cout << a[i] << " ";
-  cout << endl << endl;
-}
-
-void print_vector(vector<int> a) {
-  for (int i = 0; i < a.size(); i++) 
-    cout << a[i] << " ";
-  cout << endl << endl;
-}
-
 int main()
 {
-  vector<string> strings = {"you", "they", "we", "they", "me", "she", "you", "me", "you"}, maxs;
-  vector<int> counts;
-  int n = strings.size();
-  int count, max = 0;
-  print_vector(strings);
-  for (int i = 0; i < n; i++)
-  {
-    count = 0;
-    for (int j = 0; j < n; j++)
-      if (strings[j]==strings[i]) 
-        count++;
-    counts.push_back(count);
-    if (count > max) 
-      max = count;
+  double a = 1, b = -2, c = -3, d, x1, x2;
+  if (a==-1) cout << "-";
+  else if (a!=1) cout << a;
+  cout << "x2";
+  if (b==-1) cout << "-";
+  else if (b<-1) cout << b;
+  else if (b!=1) cout << "+" << b;
+  else if (b==1) cout << "+";
+  cout << "x";
+  if (c >= 0) cout << "+" << c;
+  else cout << c;
+  cout << " = 0" << endl;
+  d = pow(b,2) - 4*a*c;
+  cout << "D = " << d << endl;
+  if (d < 0) cout << "No roots!" << endl;
+  else if (d==0) {
+    x1 = (-b - sqrt(d))/(2*a);
+    cout << "The root of equation is " << x1 << endl;
   }
-  //print_vector(counts);
-  for (int i = 0; i < n; i++)
-    if (max==counts[i]) {
-      bool flag = false;
-      for (int j = 0; j < maxs.size(); j++)
-        if (strings[i]==maxs[j]) flag = true;
-      if (!flag) maxs.push_back(strings[i]);
-    }
-  cout << "Moda: " ;
-  print_vector(maxs);
-  //cout << endl;
+  else {
+    x1 = (-b - sqrt(d))/(2*a);
+    x2 = (-b + sqrt(d))/(2*a);
+    cout << "The roots of equation are " << x1 << " and " << x2 << endl;
+  }
+
 }
