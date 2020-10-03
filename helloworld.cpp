@@ -11,29 +11,27 @@ using namespace std;
 
 int main()
 {
-  double a = 1, b = -2, c = -3, d, x1, x2;
-  if (a==-1) cout << "-";
-  else if (a!=1) cout << a;
-  cout << "x2";
-  if (b==-1) cout << "-";
-  else if (b<-1) cout << b;
-  else if (b!=1) cout << "+" << b;
-  else if (b==1) cout << "+";
-  cout << "x";
-  if (c >= 0) cout << "+" << c;
-  else cout << c;
-  cout << " = 0" << endl;
-  d = pow(b,2) - 4*a*c;
-  cout << "D = " << d << endl;
-  if (d < 0) cout << "No roots!" << endl;
-  else if (d==0) {
-    x1 = (-b - sqrt(d))/(2*a);
-    cout << "The root of equation is " << x1 << endl;
+  string str1, str2;
+  vector<string> names, scores;
+  bool flag;
+  while (str1 != "NoName" && str2 != "0")
+  {
+    flag = false;
+    cin >> str1;
+    cin >> str2;
+    for (int i = 0; i < names.size(); i++)
+      if (str1 == names[i])
+      {
+        cout << "Error! You have already inputted this name!" << endl;
+        flag = true;
+        break;
+      }
+    if (!flag && str1 != "NoName" && str2 != "0")
+    {
+      names.push_back(str1);
+      scores.push_back(str2);
+    }
   }
-  else {
-    x1 = (-b - sqrt(d))/(2*a);
-    x2 = (-b + sqrt(d))/(2*a);
-    cout << "The roots of equation are " << x1 << " and " << x2 << endl;
-  }
-
+  for (int i = 0; i < names.size(); i++)
+    cout << names[i] << ": " << scores[i] << " scores" << endl;
 }
