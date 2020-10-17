@@ -1,51 +1,33 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <iomanip>
-#include <ctime>
-#include <set>
-#include <cmath>
+#include "std_lib_facilities.h"
 
 using namespace std;
 
+bool IsNumber(const string &s) {
+    return all_of(s.cbegin(),s.cend(),[](const char &c) {
+        return isdigit(c);
+    });
+}
+
 int main()
-{
-  string str1, str2;
-  vector<string> names, scores;
-  bool flag, flag2;
-  while (str1 != "NoName" && str2 != "0")
-  {
-    flag = false;
-    cin >> str1;
-    cin >> str2;
-    for (int i = 0; i < names.size(); i++)
-      if (str1 == names[i])
-      {
-        cout << "Error! You have already inputted this name!" << endl;
-        flag = true;
-        break;
-      }
-    if (!flag && str1 != "NoName" && str2 != "0")
+try {
+    int n, sum = 0;
+    string s;
+    vector<int> v;
+    cout << "Enter the number of values to add: ";
+    cin >> n;
+    cout << "Enter multiple integers (| to end input): ";
+    for (;;)
     {
-      names.push_back(str1);
-      scores.push_back(str2);
+        cin >> s;
+        if (s=="|") break;
+        if (!IsNumber(s)) error("It is not a number!");
+        v.push_back(stoi(s));
     }
-  }
-  str2 = "";
-  while (true)
-  {
-    flag2 = true;
-    cout << "Input score of person (- for exit): ";
-    cin >> str2;
-    if (str2 == "-")
-      break;
-    for (int i = 0; i < names.size(); i++) {
-      if (str2 == scores[i]) {
-        cout << names[i] << " has " << scores[i] << " scores" << endl;
-        flag2 = false;
-      }
-    }
-    if (flag2) cout << "Error! Our base doesn't contain such a score!" << endl;
-  }
+    //if (n > v.size()) error("n is bigger than the size of the vector");
+    for (int i = 0; i < n; i++)
+        sum+=v[i];
+    cout << "The sum of the first " << n << " numbers is " << sum << ".\n";
+} catch (out_of_range) {
+    cerr << "Error of the range!\n";
+    return 1;
 }
