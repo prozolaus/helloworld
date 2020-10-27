@@ -32,6 +32,7 @@ Revised August 3, 2020: a cleanup removing support for ancient compilers
 #include<fstream>
 #include<sstream>
 #include<cmath>
+#include <ctime>
 #include<cstdlib>
 #include<string>
 #include<list>
