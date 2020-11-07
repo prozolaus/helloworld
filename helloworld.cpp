@@ -81,6 +81,7 @@ Token Token_stream::get()
     case '-':
     case '*':
     case '/':
+    case '!':
         return Token{ ch };   // let each character represent itself
     case '.':
     case '0':
@@ -118,6 +119,10 @@ double term();        // read and evaluate a Term
 
 //------------------------------------------------------------------------------
 
+double secondary();
+
+//------------------------------------------------------------------------------
+
 double primary()     // read and evaluate a Primary
 {
     Token t = ts.get();
@@ -139,7 +144,7 @@ double primary()     // read and evaluate a Primary
 
 int main()
 try {
-    cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/\n";
+    cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/!\n";
     cout << "= - for result, x - for exit\n";
     double val = 0;
     bool b = false;
@@ -190,20 +195,47 @@ double expression()
 
 double term()
 {
-    double left = primary();
+    double left = secondary();
     Token t = ts.get();     // get the next token
 
     while (true) {
         switch (t.kind) {
         case '*':
-            left *= primary();
+            left *= secondary();
             t = ts.get();
             break;
         case '/':
         {
-            double d = primary();
+            double d = secondary();
             if (d == 0) error("divide by zero");
             left /= d;
+            t = ts.get();
+            break;
+        }
+        default:
+            ts.putback(t);
+            return left;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+
+double secondary()
+{
+    double left = primary();
+    Token t = ts.get();     // get the next token
+
+    while (true) {
+        switch (t.kind) {
+        case '!':
+        {
+            if (left != round(left)) error("integer expected for factorial");
+            if (!left) return 1;
+            int leftInt = (int)left;
+            for (int i = leftInt-1; i > 1; i--)
+                leftInt *= i;
+            left = leftInt;
             t = ts.get();
             break;
         }
