@@ -1,80 +1,217 @@
+
+//
+// This is example code from Chapter 6.6 "Trying the first version" of
+// "Software - Principles and Practice using C++" by Bjarne Stroustrup
+//
+
 #include "std_lib_facilities.h"
 
-using namespace std;
+//------------------------------------------------------------------------------
 
-bool IsNumber(const string &s) {
-    return all_of(s.cbegin(),s.cend(),[](const char &c) {
-        return isdigit(c);
-    });
+class Token {
+public:
+    char kind;        // what kind of token
+    double value;     // for numbers: a value 
+    Token(char ch)    // make a Token from a char
+        :kind(ch), value(0) { }
+    Token(char ch, double val)     // make a Token from a char and a double
+        :kind(ch), value(val) { }
+};
+
+//------------------------------------------------------------------------------
+/*
+Token get_token()    // read a token from cin
+{
+    char ch;
+    cin >> ch;    // note that >> skips whitespace (space, newline, tab, etc.)
+    switch (ch) {
+ //not yet   case ';':    // for "print"
+ //not yet   case 'q':    // for "quit"
+    case '(': case ')': case '+': case '-': case '*': case '/':
+        return Token(ch);        // let each character represent itself
+    case '.':
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+        {
+            cin.putback(ch);         // put digit back into the input stream
+            double val;
+            cin >> val;              // read a floating-point number
+            return Token('8',val);   // let '8' represent "a number"
+        }
+    default:
+        error("Bad token");
+    }
 }
+*/
+//------------------------------------------------------------------------------
+
+class Token_stream {
+public:
+    Token get();            // get a Token
+    void putback(Token t);  // put a Token back
+private:
+    bool full{ false };      // is there a Token in the buffer?
+    Token buffer = { '0' };           // where we store a 'putback' Token
+};
+
+void Token_stream::putback(Token t)
+{
+    if (full) error("putback() into a full buffer");
+    buffer = t;         // copy t to buffer
+    full = true;        // buffer is now full
+}
+
+Token Token_stream::get()
+{
+    if (full) {
+        full = false;
+        return buffer;
+    }
+    char ch;
+    cin >> ch;
+
+    switch (ch) {
+    case '=':       // for "print"
+    case 'x':       // for "quit"
+    case '(':
+    case '{':
+    case ')':
+    case '}':
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+        return Token{ ch };   // let each character represent itself
+    case '.':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    {
+        cin.putback(ch);
+        double val;
+        cin >> val;
+        return Token{ '8', val };
+    }
+    default:
+        error("Bad Token");
+    }
+}
+
+//------------------------------------------------------------------------------
+
+Token_stream ts;      // provides get() and putback()
+
+//------------------------------------------------------------------------------
+
+double expression();  // read and evaluate a Expression
+
+//------------------------------------------------------------------------------
+
+double term();        // read and evaluate a Term
+
+//------------------------------------------------------------------------------
+
+double primary()     // read and evaluate a Primary
+{
+    Token t = ts.get();
+    switch (t.kind) {
+    case '(': case '{':    // handle '(' expression ')'
+    {
+        double d = expression();
+        t = ts.get();
+        if (t.kind != ')' && t.kind != '}') error("')' or '}' expected");
+        return d;
+    }
+    case '8':            // we use '8' to represent a number
+        return t.value;  // return the number's value
+    default:
+        error("primary expected");
+    }
+}
+//------------------------------------------------------------------------------
 
 int main()
-{
-    vector<int> mon, tue, wed, thu, fri, sat, sun;
-    string str;
-    char i[256];
-    int count = 0, mon_sum = 0, tue_sum = 0, wed_sum = 0, thu_sum = 0, fri_sum = 0, sat_sum = 0, sun_sum = 0;
-    while (cin >> str)
-    {
-        if (str=="Monday"||str=="Mon"||str=="monday"||str=="mon") {
-            cin >> i;
-            if (IsNumber(i)) mon.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Tuesday"||str=="Tue"||str=="tuesday"||str=="tue") {
-            cin >> i;
-            if (IsNumber(i)) tue.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Wednesday"||str=="Wed"||str=="wednesday"||str=="wed") {
-            cin >> i;
-            if (IsNumber(i)) wed.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Thursday"||str=="Thu"||str=="thursday"||str=="thu") {
-            cin >> i;
-            if (IsNumber(i)) thu.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Friday"||str=="Fri"||str=="friday"||str=="fri") {
-            cin >> i;
-            if (IsNumber(i)) fri.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Saturday"||str=="Sat"||str=="saturday"||str=="sat") {
-            cin >> i;
-            if (IsNumber(i)) sat.push_back(atoi(i));
-            else count++;
-        }
-        else if (str=="Sunday"||str=="Sun"||str=="sunday"||str=="sun") {
-            cin >> i;
-            if (IsNumber(i)) sun.push_back(atoi(i));
-            else count++;
-        }
-        else cin.ignore(numeric_limits<streamsize>::max(), '\n');
+try {
+    cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/\n";
+    cout << "= - for result, x - for exit\n";
+    double val = 0;
+    bool b = false;
+    while (cin) {
+        Token t = ts.get();
+        if (t.kind == 'x') break;
+        if (t.kind == '=') {if (!b) cout << "= " << val << '\n'; b = true; continue;}
+        else {ts.putback(t); b = false;}
+        val = expression();
     }
-    for (int i = 0; i < mon.size(); i++) {cout << mon[i] << " "; mon_sum += mon[i];}
-    if (mon.size() > 0) cout << "- Monday, sum: " << mon_sum << endl;
-
-    for (int i = 0; i < tue.size(); i++) {cout << tue[i] << " "; tue_sum += tue[i];}
-    if (tue.size() > 0) cout << "- Tuesday, sum: " << tue_sum << endl;
-
-    for (int i = 0; i < wed.size(); i++) {cout << wed[i] << " "; wed_sum += wed[i];}
-    if (wed.size() > 0) cout << "- Wednesday, sum: " << wed_sum << endl;
-
-    for (int i = 0; i < thu.size(); i++) {cout << thu[i] << " "; thu_sum += thu[i];}
-    if (thu.size() > 0) cout << "- Thursday, sum: " << thu_sum << endl;
-
-    for (int i = 0; i < fri.size(); i++) {cout << fri[i] << " "; fri_sum += fri[i];}
-    if (fri.size() > 0) cout << "- Friday, sum: " << fri_sum << endl;
-
-    for (int i = 0; i < sat.size(); i++) {cout << sat[i] << " "; sat_sum += sat[i];}
-    if (sat.size() > 0) cout << "- Saturday, sum: " << sat_sum << endl;
-
-    for (int i = 0; i < sun.size(); i++) {cout << sun[i] << " "; sun_sum += sun[i];}
-    if (sun.size() > 0) cout << "- Sunday, sum: " << sun_sum << endl;
-
-    cout << "Counting incorrect entry of values: " << count << endl;
-    cout << "Done!" << endl;
-    
+    //keep_window_open();
 }
+catch (exception& e) {
+    cerr << e.what() << endl;
+    keep_window_open("~1");
+    return 1;
+}
+catch (...) {
+    cerr << "exception \n";
+    keep_window_open("~2");
+    return 2;
+}
+
+//------------------------------------------------------------------------------
+
+double expression()
+{
+    double left = term();      // read and evaluate a Term
+    Token t = ts.get();        // get the next token
+    while (true) {
+        switch (t.kind) {
+        case '+':
+            left += term();    // evaluate Term and add
+            t = ts.get();
+            break;
+        case '-':
+            left -= term();    // evaluate Term and subtract
+            t = ts.get();
+            break;
+        default:
+            ts.putback(t);
+            return left;       // finally: no more + or -: return the answer
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+
+double term()
+{
+    double left = primary();
+    Token t = ts.get();     // get the next token
+
+    while (true) {
+        switch (t.kind) {
+        case '*':
+            left *= primary();
+            t = ts.get();
+            break;
+        case '/':
+        {
+            double d = primary();
+            if (d == 0) error("divide by zero");
+            left /= d;
+            t = ts.get();
+            break;
+        }
+        default:
+            ts.putback(t);
+            return left;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
