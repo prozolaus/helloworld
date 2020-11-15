@@ -1,99 +1,56 @@
 #include "std_lib_facilities.h"
 
-vector<string> articles = {"a", "an", "the", "A", "An", "The"};
-vector<string> nouns = {"C++", "birds", "bird"};
-vector<string> verbs = {"fly", "flies", "rule", "rules"};
-vector<string> unions = {"but", "and", "or"};
-
-bool articles_check()
-{
-    string s;
-    cin >> s;
-    for (int i = 0; i < articles.size(); i++)
-        if (s == articles[i])
-            return true;
-    return false;
-}
-
-bool nouns_check()
-{
-    string s;
-    cin >> s;
-    for (int i = 0; i < nouns.size(); i++)
-        if (s == nouns[i])
-            return true;
-    return false;
-}
-
-bool verbs_check()
-{
-    string s;
-    cin >> s;
-    for (int i = 0; i < verbs.size(); i++)
-        if (s == verbs[i])
-            return true;
-    return false;
-}
-
-bool unions_check()
-{
-    string s;
-    cin >> s;
-    for (int i = 0; i < unions.size(); i++)
-        if (s == unions[i])
-            return true;
-    return false;
-}
-
-bool dot_check()
-{
-    if (cin.get() == '\n')
-        return false;
-    char s;
-    cin >> s;
-    if (s == '.')
-        return true;
-    return false;
-}
+using namespace std;
 
 int main()
 {
-    bool a = true, b = true, c = true, u = false, dot = false;
-    while (cin)
+    srand(static_cast<unsigned int>(time(0)));
+    constexpr int size = 4;
+    vector<char> comp(size);
+    for (int i = 0; i < size; i++)
     {
-        for (int i = 0; i < 2; i++)
+        comp[i] = rand() % 26 + 97;
+        for (int j = 0; j < i; j++)
         {
-            a = articles_check();
-            if (a)
+            if (comp[i] == comp[j])
             {
-                b = nouns_check();
-                if (b)
-                {
-                    c = verbs_check();
-                    if (c)
-                    {
-                        if (i == 0)
-                        {
-                            u = unions_check();
-                            if (!u)
-                                break;
-                        }
-                        else
-                            dot = dot_check();
-                    }
-                    else
-                        break;
-                }
-                else
-                    break;
-            }
-            else
+                i--;
                 break;
+            }
         }
-        if (!a || !b || !c || !u || !dot)
-            cout << "No!" << endl;
-        else
-            cout << "Yes!" << endl;
-        cin.ignore(cin.rdbuf()->in_avail());
     }
+    int bulls, cows;
+    vector<char> user(size);
+    char k;
+    do
+    {
+        bulls = 0, cows = 0;
+        for (int i = 0; i < size; i++)
+        {
+            cin >> k;
+            if (k < 'a' || k > 'z') {
+                error("Wrong input!");
+            }
+            else user[i] = k;
+        }
+        for (int i = 0; i < size; i++)
+        {
+            if (user[i] == comp[i])
+                bulls++;
+            else
+            {
+                for (int j = 0; j < size; j++)
+                {
+                    if (j == i)
+                        continue;
+                    if (user[j] == comp[i])
+                        cows++;
+                }
+            }
+        }
+        cout << "bulls: " << bulls << ", cows: " << cows << endl << endl;
+    } while (bulls != size);
+    for (char x : comp)
+        cout << x;
+    cout << endl;
 }
