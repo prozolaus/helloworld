@@ -2,55 +2,61 @@
 
 using namespace std;
 
+void check(string s)
+{
+    for (int i = 0; i < s.size(); i++)
+    {
+        if (s[i] < '0' || s[i] > '9')
+            error("It is not a number!");
+    }
+    if (s.size() > 4)
+        error("The number of digits is more than 4.");
+}
+
+void units(string s)
+{
+    cout << s[0] << " - units.";
+}
+
+void tens(string s)
+{
+    cout << s[0] << " - tens, ";
+    string temp_s(s.begin()+1, s.end());
+    units(temp_s);
+}
+
+void hundreds(string s)
+{
+    cout << s[0] << " - hundreds, ";
+    string temp_s(s.begin()+1, s.end());
+    tens(temp_s);
+}
+
+void thousands(string s)
+{
+    cout << s[0] << " - thousands, ";
+    string temp_s(s.begin()+1, s.end());
+    hundreds(temp_s);
+}
+
 int main()
 {
-    srand(static_cast<unsigned int>(time(0)));
-    constexpr int size = 4;
-    vector<char> comp(size);
-    for (int i = 0; i < size; i++)
+    int num;
+    while (cin)
     {
-        comp[i] = rand() % 26 + 97;
-        for (int j = 0; j < i; j++)
-        {
-            if (comp[i] == comp[j])
-            {
-                i--;
-                break;
-            }
-        }
+        string s, s2;
+        cin >> s;
+        check(s);
+        num = stoi(s);
+        s2 = to_string(num);
+        if (s2.size() == 4)
+            thousands(s2);
+        else if (s2.size() == 3)
+            hundreds(s2);
+        else if (s2.size() == 2)
+            tens(s2);
+        else
+            units(s2);
+        cout << endl;
     }
-    int bulls, cows;
-    vector<char> user(size);
-    char k;
-    do
-    {
-        bulls = 0, cows = 0;
-        for (int i = 0; i < size; i++)
-        {
-            cin >> k;
-            if (k < 'a' || k > 'z') {
-                error("Wrong input!");
-            }
-            else user[i] = k;
-        }
-        for (int i = 0; i < size; i++)
-        {
-            if (user[i] == comp[i])
-                bulls++;
-            else
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    if (j == i)
-                        continue;
-                    if (user[j] == comp[i])
-                        cows++;
-                }
-            }
-        }
-        cout << "bulls: " << bulls << ", cows: " << cows << endl << endl;
-    } while (bulls != size);
-    for (char x : comp)
-        cout << x;
-    cout << endl;
 }
