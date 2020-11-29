@@ -19,31 +19,6 @@ public:
 };
 
 //------------------------------------------------------------------------------
-/*
-Token get_token()    // read a token from cin
-{
-    char ch;
-    cin >> ch;    // note that >> skips whitespace (space, newline, tab, etc.)
-    switch (ch) {
- //not yet   case ';':    // for "print"
- //not yet   case 'q':    // for "quit"
-    case '(': case ')': case '+': case '-': case '*': case '/':
-        return Token(ch);        // let each character represent itself
-    case '.':
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-        {
-            cin.putback(ch);         // put digit back into the input stream
-            double val;
-            cin >> val;              // read a floating-point number
-            return Token('8',val);   // let '8' represent "a number"
-        }
-    default:
-        error("Bad token");
-    }
-}
-*/
-//------------------------------------------------------------------------------
 
 class Token_stream {
 public:
@@ -54,12 +29,16 @@ private:
     Token buffer = { '0' };           // where we store a 'putback' Token
 };
 
+//------------------------------------------------------------------------------
+
 void Token_stream::putback(Token t)
 {
     if (full) error("putback() into a full buffer");
     buffer = t;         // copy t to buffer
     full = true;        // buffer is now full
 }
+
+//------------------------------------------------------------------------------
 
 Token Token_stream::get()
 {
@@ -102,6 +81,7 @@ Token Token_stream::get()
     default:
         error("Bad Token");
     }
+    return 0; //For compiler
 }
 
 //------------------------------------------------------------------------------
@@ -118,23 +98,8 @@ double term();        // read and evaluate a Term
 
 //------------------------------------------------------------------------------
 
-double primary()     // read and evaluate a Primary
-{
-    Token t = ts.get();
-    switch (t.kind) {
-    case '(': case '{':    // handle '(' expression ')'
-    {
-        double d = expression();
-        t = ts.get();
-        if (t.kind != ')' && t.kind != '}') error("')' or '}' expected");
-        return d;
-    }
-    case '8':            // we use '8' to represent a number
-        return t.value;  // return the number's value
-    default:
-        error("primary expected");
-    }
-}
+double primary();     // read and evaluate a Primary
+
 //------------------------------------------------------------------------------
 
 int main()
@@ -215,3 +180,22 @@ double term()
 }
 
 //------------------------------------------------------------------------------
+
+double primary()     // read and evaluate a Primary
+{
+    Token t = ts.get();
+    switch (t.kind) {
+    case '(': case '{':    // handle '(' expression ')'
+    {
+        double d = expression();
+        t = ts.get();
+        if (t.kind != ')' && t.kind != '}') error("')' or '}' expected");
+        return d;
+    }
+    case '8':            // we use '8' to represent a number
+        return t.value;  // return the number's value
+    default:
+        error("primary expected");
+    }
+    return 0; //For compiler
+}
