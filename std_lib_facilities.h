@@ -206,6 +206,14 @@ template<class R, class A> R narrow_cast(const A& a)
 	return r;
 }
 
+// run-time checked narrowing cast (type conversion) for function pow.
+template<class R, class A> R narrow_cast_pow(const A& a)
+{
+	R r = R(a);
+	if (A(r) != a) error("second argument must be an integer");
+	return r;
+}
+
 // random number generators. See 24.7.
 
 inline default_random_engine& get_rand()

@@ -10,26 +10,42 @@
 
 const char number = '8'; // we use '8' to represent a number
 
-const char quit = 'x'; // for "quit"
+const char quit = 'q';          // for "quit"
+const string quit_str = "exit"; // for "quit"
 
-const char print = '='; // for "print"
+const char print = ';'; // for "print"
 
 const string prompt = "> ";
 const string result = "= ";
+
+const char name = 'a';
+const char let = 'L';
+const string deckley = "let"; //keyword "let"
+const char const_kind = 'C';
+const string const_key = "const"; //keyword "const"
+const char sqrt_kind = 'S';
+const string sqrt_key = "sqrt";
+const char pow_kind = 'P';
+const string pow_key = "pow";
 
 //------------------------------------------------------------------------------
 
 class Token
 {
 public:
-    char kind;     // what kind of token
-    double value;  // for numbers: a value
+    char kind;    // what kind of token
+    double value; // for numbers: a value
+    string name;
     Token(char ch) // make a Token from a char
         : kind(ch), value(0)
     {
     }
     Token(char ch, double val) // make a Token from a char and a double
         : kind(ch), value(val)
+    {
+    }
+    Token(char ch, string n) // make a Token from a char and a string
+        : kind(ch), name(n)
     {
     }
 };
@@ -41,7 +57,7 @@ class Token_stream
 public:
     Token get();           // get a Token
     void putback(Token t); // put a Token back
-    void ignore(char c);    //discards characters up to and including "c"
+    void ignore(char c);   //discards characters up to and including "c"
 private:
     bool full{false};     // is there a Token in the buffer?
     Token buffer = {'0'}; // where we store a 'putback' Token
@@ -59,36 +75,41 @@ void Token_stream::putback(Token t)
 
 //------------------------------------------------------------------------------
 
-void Token_stream::ignore(char c) 
+void Token_stream::ignore(char c)
+//the "c" character provides a variety of tokens
 {
-    if (full && c==buffer.kind) {
+    //first check the buffer
+    if (full && c == buffer.kind)
+    {
         full = false;
         return;
     }
     full = false;
 
+    //now we check the input
     char ch = 0;
-    while (cin>>ch) 
-        if (ch==c) return;
+    while (cin >> ch)
+        if (ch == c)
+            return;
 }
-
 //------------------------------------------------------------------------------
 
 Token Token_stream::get()
 //reading characters from cin and drawing up a Token
 {
-    if (full)     //checking if a Token is in the buffer
+    if (full) //checking if a Token is in the buffer
     {
         full = false;
         return buffer;
     }
     char ch;
-    cin >> ch;      //note that operator >> skips whitespace
+    cin >> ch; //note that operator >> skips whitespace
 
     switch (ch)
     {
     case print: // for "print"
     case quit:  // for "exit"
+    case '=':
     case '(':
     case '{':
     case ')':
@@ -98,9 +119,10 @@ Token Token_stream::get()
     case '*':
     case '/':
     case '%':
+    case ',':
     case '!':
         return Token{ch}; // let each character represent itself
-    case '.':   // floating point number can start with a point
+    case '.':             // floating point number can start with a point
     // numeric literal:
     case '0':
     case '1':
@@ -113,12 +135,33 @@ Token Token_stream::get()
     case '8':
     case '9':
     {
-        cin.putback(ch);    // returning a digit to the input stream
+        cin.putback(ch); // returning a digit to the input stream
         double val;
-        cin >> val;     // reading a double
+        cin >> val; // reading a double
         return Token{number, val};
     }
+    case '#':
+        return Token{let}; //keyword "let"
     default:
+        if (isalpha(ch))
+        {
+            string s;
+            s += ch;
+            while (cin.get(ch) && (isalpha(ch) || isdigit(ch) || ch=='_'))
+                s += ch;
+            cin.putback(ch);
+            if (s == deckley)
+                return Token{let}; //keyword "let"
+            if (s == const_key)
+                return Token{const_kind}; //keyword "let"
+            if (s == sqrt_key)
+                return Token{sqrt_kind, s};
+            if (s == pow_key)
+                return Token{pow_kind, s};
+            if (s == quit_str)
+                return Token{quit, s}; //for "exit"
+            return Token{name, s};
+        }
         error("Bad Token");
     }
     return 0; //For compiler
@@ -138,7 +181,7 @@ double term(); // read and evaluate a Term
 
 //------------------------------------------------------------------------------
 
-double secondary();  // read and evaluate a Factorial
+double secondary(); // read and evaluate a Factorial
 
 //------------------------------------------------------------------------------
 
@@ -153,30 +196,126 @@ void clean_up_mess()
 
 //------------------------------------------------------------------------------
 
-void calculate()    //expression evaluation loop
+class Variable
+{
+public:
+    string name;
+    double value;
+    bool con;
+    Variable(string var, double val, bool c) // make a Variable from a string, a double and a bool (for const)
+        : name(var), value(val), con(c)
+    {
+    }
+};
+
+vector<Variable> var_table;
+
+double get_value(string s)
+//returns the value of a variable named "s"
+{
+    for (const Variable &v : var_table)
+        if (v.name == s)
+            return v.value;
+    error("get: undefined variable ", s);
+    return 0;
+}
+
+void set_value(string s, double d)
+// assigns a value 'd' to an 's' object of type Variable
+{
+    for (Variable &v : var_table)
+        if (v.name == s)
+        {
+            if (v.con)
+                error("set: constant cannot be changed");
+            v.value = d;
+            return;
+        }
+    error("set: undefined variable ", s);
+}
+
+//-------------------------------------------------------------------------------
+
+bool is_declared(string var)
+//Is there a variable 'var' in the var_table vector?
+{
+    for (const Variable &v : var_table)
+        if (v.name == var)
+            return true;
+    return false;
+}
+
+double define_name(string var, double val, bool c)
+// add a triple (var, val, c) to the vector var_table
+{
+    if (is_declared(var))
+        set_value(var,val);
+        //error(var, " re-declaring a variable");
+    else 
+        var_table.push_back(Variable(var, val, c));
+    return val;
+}
+
+double declaration(bool c)
+{
+    Token t = ts.get();
+    if (t.kind != name)
+        error("variable name is expected in the declaration");
+    string var_name = t.name;
+
+    Token t2 = ts.get();
+    if (t2.kind != '=')
+        error("the = symbol is missing in the declaration ", var_name);
+    double d = expression();
+    define_name(var_name, d, c);
+    return d;
+}
+
+double statement()
+{
+    Token t = ts.get();
+    switch (t.kind)
+    {
+    case let:
+        return declaration(false);  // false is a variable
+    case const_kind:
+        return declaration(true);   // true is a constant
+    default:
+        ts.putback(t);
+        return expression();
+    }
+}
+
+//------------------------------------------------------------------------------
+
+void calculate() //statement evaluation loop
 {
     while (cin)
-    try {
-        cout << prompt;
-        Token t = ts.get();
-        while (t.kind == print)
-            t = ts.get();   //removing output
-        if (t.kind == quit)
-            break;
-        ts.putback(t);
-        cout << result << expression() << "\n";
-    }
-    catch (exception& e) {
-        cerr << e.what() << '\n';
-        clean_up_mess();
-    }
+        try
+        {
+            cout << prompt;
+            Token t = ts.get();
+            while (t.kind == print)
+                t = ts.get(); //removing output
+            if (t.kind == quit)
+                return;
+            ts.putback(t);
+            cout << result << statement() << "\n";
+        }
+        catch (exception &e)
+        {
+            cerr << e.what() << '\n'; //error message output
+            clean_up_mess();
+        }
 }
 
 int main()
 try
 {
-    cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/%!\n";
-    cout << "= - for result, x - for exit\n";
+    //Predefined names
+    define_name("pi", 3.1415926535, true);
+    define_name("e", 2.7182818284, true);
+    define_name("k", 1000, true);
     calculate();
     return 0;
 }
@@ -251,6 +390,13 @@ double term()
             t = ts.get();
             break;
         }
+        case ',':
+        {
+            int i = narrow_cast_pow<int>(secondary());
+            left = pow(left, i);
+            t = ts.get();
+            break;
+        }
         default:
             ts.putback(t);
             return left;
@@ -296,7 +442,7 @@ double primary() // read and evaluate a Primary
     Token t = ts.get();
     switch (t.kind)
     {
-    case '(':  // handle '(' expression ')'
+    case '(': // handle '(' expression ')'
     case '{': // handle '{' expression '}'
     {
         double d = expression();
@@ -310,7 +456,17 @@ double primary() // read and evaluate a Primary
     case '-':
         return -primary();
     case '+':
+    case pow_kind:
         return primary();
+    case name:
+        return get_value(t.name);
+    case sqrt_kind:
+    {
+        double d = primary();
+        if (d < 0)
+            error("cannot take the square root of a negative number.");
+        return sqrt(d); //returns the expression's square root
+    }
     default:
         error("primary expected");
     }
@@ -318,3 +474,6 @@ double primary() // read and evaluate a Primary
 }
 
 //------------------------------------------------------------------------------
+
+//cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/%!\n";
+//cout << "The symbol \'" << print <<"\' is for result printing and \'" << quit << "\' - for exit\n";
