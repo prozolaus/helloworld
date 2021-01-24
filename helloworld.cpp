@@ -13,6 +13,9 @@ const char number = '8'; // we use '8' to represent a number
 const char quit = 'q';          // for "quit"
 const string quit_str = "exit"; // for "quit"
 
+const char help = 'h';          // for "instructions"
+const string help_str = "help"; // for "instructions"
+
 const char print = ';'; // for "print"
 
 const string prompt = "> ";
@@ -27,6 +30,14 @@ const char sqrt_kind = 'S';
 const string sqrt_key = "sqrt";
 const char pow_kind = 'P';
 const string pow_key = "pow";
+
+//------------------------------------------------------------------------------
+
+void instructions()
+{
+    cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/%!\n";
+    cout << "The symbol \'" << print << "\' is for result printing and \'" << quit << "\' - for exit\n";
+}
 
 //------------------------------------------------------------------------------
 
@@ -92,6 +103,7 @@ void Token_stream::ignore(char c)
         if (ch == c)
             return;
 }
+
 //------------------------------------------------------------------------------
 
 Token Token_stream::get()
@@ -147,7 +159,7 @@ Token Token_stream::get()
         {
             string s;
             s += ch;
-            while (cin.get(ch) && (isalpha(ch) || isdigit(ch) || ch=='_'))
+            while (cin.get(ch) && (isalpha(ch) || isdigit(ch) || ch == '_'))
                 s += ch;
             cin.putback(ch);
             if (s == deckley)
@@ -160,6 +172,8 @@ Token Token_stream::get()
                 return Token{pow_kind, s};
             if (s == quit_str)
                 return Token{quit, s}; //for "exit"
+            if (s == help_str)
+                return Token{help, s}; //for "printing instructions"
             return Token{name, s};
         }
         error("Bad Token");
@@ -208,9 +222,19 @@ public:
     }
 };
 
-vector<Variable> var_table;
+class Symbol_table
+{
+public:
+    vector<Variable> var_table;
+    double get(string s);
+    void set(string s, double d);
+    bool is_declared(string var);
+    double define_name(string var, double val, bool c);
+};
 
-double get_value(string s)
+Symbol_table st;
+
+double Symbol_table::get(string s)
 //returns the value of a variable named "s"
 {
     for (const Variable &v : var_table)
@@ -220,7 +244,7 @@ double get_value(string s)
     return 0;
 }
 
-void set_value(string s, double d)
+void Symbol_table::set(string s, double d)
 // assigns a value 'd' to an 's' object of type Variable
 {
     for (Variable &v : var_table)
@@ -236,7 +260,7 @@ void set_value(string s, double d)
 
 //-------------------------------------------------------------------------------
 
-bool is_declared(string var)
+bool Symbol_table::is_declared(string var)
 //Is there a variable 'var' in the var_table vector?
 {
     for (const Variable &v : var_table)
@@ -245,13 +269,13 @@ bool is_declared(string var)
     return false;
 }
 
-double define_name(string var, double val, bool c)
+double Symbol_table::define_name(string var, double val, bool c)
 // add a triple (var, val, c) to the vector var_table
 {
     if (is_declared(var))
-        set_value(var,val);
-        //error(var, " re-declaring a variable");
-    else 
+        set(var, val);
+    //error(var, " re-declaring a variable");
+    else
         var_table.push_back(Variable(var, val, c));
     return val;
 }
@@ -267,7 +291,7 @@ double declaration(bool c)
     if (t2.kind != '=')
         error("the = symbol is missing in the declaration ", var_name);
     double d = expression();
-    define_name(var_name, d, c);
+    st.define_name(var_name, d, c);
     return d;
 }
 
@@ -277,9 +301,9 @@ double statement()
     switch (t.kind)
     {
     case let:
-        return declaration(false);  // false is a variable
+        return declaration(false); // false is a variable
     case const_kind:
-        return declaration(true);   // true is a constant
+        return declaration(true); // true is a constant
     default:
         ts.putback(t);
         return expression();
@@ -295,6 +319,10 @@ void calculate() //statement evaluation loop
         {
             cout << prompt;
             Token t = ts.get();
+            if (t.kind == help) {
+                instructions();
+                continue;
+            }
             while (t.kind == print)
                 t = ts.get(); //removing output
             if (t.kind == quit)
@@ -313,9 +341,9 @@ int main()
 try
 {
     //Predefined names
-    define_name("pi", 3.1415926535, true);
-    define_name("e", 2.7182818284, true);
-    define_name("k", 1000, true);
+    st.define_name("pi", 3.1415926535, true);
+    st.define_name("e", 2.7182818284, true);
+    st.define_name("k", 1000, true);
     calculate();
     return 0;
 }
@@ -459,7 +487,7 @@ double primary() // read and evaluate a Primary
     case pow_kind:
         return primary();
     case name:
-        return get_value(t.name);
+        return st.get(t.name); // return a variable's or constant's value
     case sqrt_kind:
     {
         double d = primary();
@@ -474,6 +502,3 @@ double primary() // read and evaluate a Primary
 }
 
 //------------------------------------------------------------------------------
-
-//cout << "Welcome to the calculator! \nPlease, input expressions with real numbers, brackets and math operations +-*/%!\n";
-//cout << "The symbol \'" << print <<"\' is for result printing and \'" << quit << "\' - for exit\n";
