@@ -66,13 +66,21 @@ public:
 class Token_stream
 {
 public:
-    Token get();           // get a Token
-    void putback(Token t); // put a Token back
-    void ignore(char c);   //discards characters up to and including "c"
+    Token_stream();          // make a Token_stream that reads from cin
+    Token_stream(istream &); // Token_stream that reads from an istream
+    Token get();             // get a Token
+    void putback(Token t);   // put a Token back
+    void ignore(char c);     //discards characters up to and including "c"
 private:
-    bool full{false};     // is there a Token in the buffer?
-    Token buffer = {'0'}; // where we store a 'putback' Token
+    bool full;    // is there a Token in the buffer?
+    Token buffer; // where we store a 'putback' Token
 };
+
+//------------------------------------------------------------------------------
+
+// constructor
+Token_stream::Token_stream()
+    : full(false), buffer(0) {} // no Token in buffer
 
 //------------------------------------------------------------------------------
 
@@ -187,19 +195,19 @@ Token_stream ts; // provides get(), putback() and ignore()
 
 //------------------------------------------------------------------------------
 
-double expression(); // read and evaluate a Expression
+double expression(Token_stream &); // read and evaluate a Expression
 
 //------------------------------------------------------------------------------
 
-double term(); // read and evaluate a Term
+double term(Token_stream &); // read and evaluate a Term
 
 //------------------------------------------------------------------------------
 
-double secondary(); // read and evaluate a Factorial
+double secondary(Token_stream &); // read and evaluate a Factorial
 
 //------------------------------------------------------------------------------
 
-double primary(); // read and evaluate a Primary
+double primary(Token_stream &); // read and evaluate a Primary
 
 //------------------------------------------------------------------------------
 
@@ -215,7 +223,7 @@ class Variable
 public:
     string name;
     double value;
-    bool con;
+    bool con;                                //true - for const, false - for variable
     Variable(string var, double val, bool c) // make a Variable from a string, a double and a bool (for const)
         : name(var), value(val), con(c)
     {
@@ -225,7 +233,7 @@ public:
 class Symbol_table
 {
 public:
-    vector<Variable> var_table;
+    vector<Variable> var_table; // it stores values of variables and constants
     double get(string s);
     void set(string s, double d);
     bool is_declared(string var);
@@ -290,7 +298,7 @@ double declaration(bool c)
     Token t2 = ts.get();
     if (t2.kind != '=')
         error("the = symbol is missing in the declaration ", var_name);
-    double d = expression();
+    double d = expression(ts);
     st.define_name(var_name, d, c);
     return d;
 }
@@ -306,7 +314,7 @@ double statement()
         return declaration(true); // true is a constant
     default:
         ts.putback(t);
-        return expression();
+        return expression(ts);
     }
 }
 
@@ -319,16 +327,17 @@ void calculate() //statement evaluation loop
         {
             cout << prompt;
             Token t = ts.get();
-            if (t.kind == help) {
-                instructions();
-                continue;
-            }
             while (t.kind == print)
                 t = ts.get(); //removing output
-            if (t.kind == quit)
-                return;
-            ts.putback(t);
-            cout << result << statement() << "\n";
+            if (t.kind == help)
+                instructions();
+            else
+            {
+                if (t.kind == quit)
+                    return;
+                ts.putback(t);
+                cout << result << statement() << "\n";
+            }
         }
         catch (exception &e)
         {
@@ -362,20 +371,20 @@ catch (...)
 
 //------------------------------------------------------------------------------
 
-double expression()
+double expression(Token_stream &ts)
 {
-    double left = term(); // read and evaluate a Term
-    Token t = ts.get();   // get the next token
+    double left = term(ts); // read and evaluate a Term
+    Token t = ts.get();     // get the next token
     while (true)
     {
         switch (t.kind)
         {
         case '+':
-            left += term(); // evaluate Term and add
+            left += term(ts); // evaluate Term and add
             t = ts.get();
             break;
         case '-':
-            left -= term(); // evaluate Term and subtract
+            left -= term(ts); // evaluate Term and subtract
             t = ts.get();
             break;
         default:
@@ -387,9 +396,9 @@ double expression()
 
 //------------------------------------------------------------------------------
 
-double term()
+double term(Token_stream &ts)
 {
-    double left = secondary();
+    double left = secondary(ts);
     Token t = ts.get(); // get the next token
 
     while (true)
@@ -397,12 +406,12 @@ double term()
         switch (t.kind)
         {
         case '*':
-            left *= secondary();
+            left *= secondary(ts);
             t = ts.get();
             break;
         case '/':
         {
-            double d = secondary();
+            double d = secondary(ts);
             if (d == 0)
                 error("divide by zero");
             left /= d;
@@ -411,7 +420,7 @@ double term()
         }
         case '%':
         {
-            double d = secondary();
+            double d = secondary(ts);
             if (d == 0)
                 error("divide by zero");
             left = fmod(left, d);
@@ -420,7 +429,7 @@ double term()
         }
         case ',':
         {
-            int i = narrow_cast_pow<int>(secondary());
+            int i = narrow_cast_pow<int>(secondary(ts));
             left = pow(left, i);
             t = ts.get();
             break;
@@ -434,9 +443,9 @@ double term()
 
 //------------------------------------------------------------------------------
 
-double secondary()
+double secondary(Token_stream &ts)
 {
-    double left = primary();
+    double left = primary(ts);
     Token t = ts.get(); // get the next token
 
     while (true)
@@ -465,7 +474,7 @@ double secondary()
 
 //------------------------------------------------------------------------------
 
-double primary() // read and evaluate a Primary
+double primary(Token_stream &ts) // read and evaluate a Primary
 {
     Token t = ts.get();
     switch (t.kind)
@@ -473,7 +482,7 @@ double primary() // read and evaluate a Primary
     case '(': // handle '(' expression ')'
     case '{': // handle '{' expression '}'
     {
-        double d = expression();
+        double d = expression(ts);
         t = ts.get();
         if (t.kind != ')' && t.kind != '}')
             error("')' or '}' expected");
@@ -482,15 +491,15 @@ double primary() // read and evaluate a Primary
     case number:
         return t.value; // return the number's value
     case '-':
-        return -primary();
+        return -primary(ts);
     case '+':
     case pow_kind:
-        return primary();
+        return primary(ts);
     case name:
         return st.get(t.name); // return a variable's or constant's value
     case sqrt_kind:
     {
-        double d = primary();
+        double d = primary(ts);
         if (d < 0)
             error("cannot take the square root of a negative number.");
         return sqrt(d); //returns the expression's square root
