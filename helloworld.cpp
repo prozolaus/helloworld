@@ -5,6 +5,7 @@
 //
 
 #include "std_lib_facilities.h"
+#include "roman_int.h"
 
 //------------------------------------------------------------------------------
 
@@ -159,6 +160,23 @@ Token Token_stream::get()
         double val;
         cin >> val; // reading a double
         return Token{number, val};
+    }
+    case 'I':
+    case 'V':
+    case 'X':
+    case 'L':
+    case 'C':
+    case 'D':
+    case 'M':
+    {
+        string s;
+        s += ch;
+        while (cin.get(ch) && isalpha(ch))
+            s += ch;
+        cin.putback(ch);
+        Roman_int rmn{s};
+        double d = (double)rmn.as_int();
+        return Token{number, d};
     }
     case '#':
         return Token{let}; //keyword "let"

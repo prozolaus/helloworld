@@ -7,7 +7,9 @@
             "command": "/usr/bin/g++",
             "args": [
                 "-g",
-                "${file}",
+                //"${file}",
+                "helloworld.cpp",
+                "roman_int.cpp",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
