@@ -67,11 +67,15 @@ public:
 class Token_stream
 {
 public:
-    Token_stream();          // make a Token_stream that reads from cin
-    Token_stream(istream &); // Token_stream that reads from an istream
-    Token get();             // get a Token
-    void putback(Token t);   // put a Token back
-    void ignore(char c);     //discards characters up to and including "c"
+    Token_stream();                     // make a Token_stream that reads from cin
+    Token_stream(istream &);            // Token_stream that reads from an istream
+    Token_stream(istream &, ostream &); // Token_stream that reads from an istream and print to an ostream
+    Token get();                        // get a Token
+    void putback(Token t);              // put a Token back
+    void ignore(char c);                //discards characters up to and including "c"
+    istream &is;
+    ostream &os;
+
 private:
     bool full;    // is there a Token in the buffer?
     Token buffer; // where we store a 'putback' Token
@@ -79,9 +83,15 @@ private:
 
 //------------------------------------------------------------------------------
 
-// constructor
+// constructors
 Token_stream::Token_stream()
-    : full(false), buffer(0) {} // no Token in buffer
+    : full(false), buffer(0), is{cin}, os{cout} {} // no Token in buffer
+
+Token_stream::Token_stream(istream &ist)
+    : full(false), buffer(0), is{ist}, os{cout} {} // no Token in buffer
+
+Token_stream::Token_stream(istream &ist, ostream &ost)
+    : full(false), buffer(0), is{ist}, os{ost} {} // no Token in buffer
 
 //------------------------------------------------------------------------------
 
@@ -108,7 +118,7 @@ void Token_stream::ignore(char c)
 
     //now we check the input
     char ch = 0;
-    while (cin >> ch)
+    while (is >> ch)
         if (ch == c)
             return;
 }
@@ -116,7 +126,7 @@ void Token_stream::ignore(char c)
 //------------------------------------------------------------------------------
 
 Token Token_stream::get()
-//reading characters from cin and drawing up a Token
+//reading characters from is (istream) and drawing up a Token
 {
     if (full) //checking if a Token is in the buffer
     {
@@ -124,7 +134,7 @@ Token Token_stream::get()
         return buffer;
     }
     char ch;
-    cin >> ch; //note that operator >> skips whitespace
+    is >> ch; //note that operator >> skips whitespace
 
     switch (ch)
     {
@@ -156,9 +166,9 @@ Token Token_stream::get()
     case '8':
     case '9':
     {
-        cin.putback(ch); // returning a digit to the input stream
+        is.putback(ch); // returning a digit to the input stream
         double val;
-        cin >> val; // reading a double
+        is >> val; // reading a double
         return Token{number, val};
     }
     case 'I':
@@ -171,9 +181,9 @@ Token Token_stream::get()
     {
         string s;
         s += ch;
-        while (cin.get(ch) && isalpha(ch))
+        while (is.get(ch) && isalpha(ch))
             s += ch;
-        cin.putback(ch);
+        is.putback(ch);
         Roman_int rmn{s};
         double d = (double)rmn.as_int();
         return Token{number, d};
@@ -185,9 +195,9 @@ Token Token_stream::get()
         {
             string s;
             s += ch;
-            while (cin.get(ch) && (isalpha(ch) || isdigit(ch) || ch == '_'))
+            while (is.get(ch) && (isalpha(ch) || isdigit(ch) || ch == '_'))
                 s += ch;
-            cin.putback(ch);
+            is.putback(ch);
             if (s == deckley)
                 return Token{let}; //keyword "let"
             if (s == const_key)
@@ -209,8 +219,6 @@ Token Token_stream::get()
 
 //------------------------------------------------------------------------------
 
-Token_stream ts; // provides get(), putback() and ignore()
-
 //------------------------------------------------------------------------------
 
 double expression(Token_stream &); // read and evaluate a Expression
@@ -226,13 +234,6 @@ double secondary(Token_stream &); // read and evaluate a Factorial
 //------------------------------------------------------------------------------
 
 double primary(Token_stream &); // read and evaluate a Primary
-
-//------------------------------------------------------------------------------
-
-void clean_up_mess()
-{
-    ts.ignore(print);
-}
 
 //------------------------------------------------------------------------------
 
@@ -306,7 +307,7 @@ double Symbol_table::define_name(string var, double val, bool c)
     return val;
 }
 
-double declaration(bool c)
+double declaration(Token_stream &ts, bool c)
 {
     Token t = ts.get();
     if (t.kind != name)
@@ -321,15 +322,15 @@ double declaration(bool c)
     return d;
 }
 
-double statement()
+double statement(Token_stream &ts)
 {
     Token t = ts.get();
     switch (t.kind)
     {
     case let:
-        return declaration(false); // false is a variable
+        return declaration(ts, false); // false is a variable
     case const_kind:
-        return declaration(true); // true is a constant
+        return declaration(ts, true); // true is a constant
     default:
         ts.putback(t);
         return expression(ts);
@@ -338,12 +339,12 @@ double statement()
 
 //------------------------------------------------------------------------------
 
-void calculate() //statement evaluation loop
+void calculate(Token_stream &ts) //statement evaluation loop
 {
-    while (cin)
+    while (ts.is)
         try
         {
-            cout << prompt;
+            ts.os << prompt;
             Token t = ts.get();
             while (t.kind == print)
                 t = ts.get(); //removing output
@@ -354,13 +355,13 @@ void calculate() //statement evaluation loop
                 if (t.kind == quit)
                     return;
                 ts.putback(t);
-                cout << result << statement() << "\n";
+                ts.os << result << statement(ts) << "\n";
             }
         }
         catch (exception &e)
         {
             cerr << e.what() << '\n'; //error message output
-            clean_up_mess();
+            ts.ignore(print);         //clean up mess
         }
 }
 
@@ -371,7 +372,11 @@ try
     st.define_name("pi", 3.1415926535, true);
     st.define_name("e", 2.7182818284, true);
     st.define_name("k", 1000, true);
-    calculate();
+    string s = "2+2;q";
+    istringstream iss{s};
+    ofstream ofs{"output.txt"};
+    Token_stream ts{iss, ofs}; // provides get(), putback() and ignore()
+    calculate(ts);
     return 0;
 }
 catch (exception &e)
